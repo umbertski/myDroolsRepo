@@ -1,0 +1,41 @@
+package uk.gov.ipo.renewals;
+
+rule "starting initially"
+ruleflow-group "Initially"
+salience 999999
+    when
+    then
+        Helper.log(drools, "starting Initially .....");
+end
+
+rule "starting definitions"
+ruleflow-group "Definitions"
+salience 999999
+    when
+    then
+        Helper.log(drools, "starting Defintions  .....");
+end
+
+rule "starting eligibility"
+ruleflow-group "Eligibility"
+salience 999999
+    when
+    then
+        Helper.log(drools, "starting Eligibility  .....");
+end
+
+rule "starting pricing"
+ruleflow-group "Pricing"
+salience 9999999
+    when
+    then
+        Helper.log(drools, "starting Pricing  .....");
+end
+
+rule "starting finally"
+ruleflow-group "Finally"
+salience 9999999
+    when
+    then
+        Helper.log(drools, "starting Finally  .....");
+end

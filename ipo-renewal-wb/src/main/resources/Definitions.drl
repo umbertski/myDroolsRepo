@@ -1,0 +1,95 @@
+package uk.gov.ipo.renewals;
+import uk.gov.ipo.renewals.model.*;
+import java.time.LocalDate;
+import java.time.ZoneId;
+
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
+
+rule "today for rights"
+ruleflow-group "Definitions"
+    when
+        $R: Right(today == null)
+    then
+        modify($R) {setToday(LocalDate.now(ZoneId.of("Europe/London")))};
+        Helper.log(drools, $R.toString());
+end
+
+rule "Patent payment due date"
+ruleflow-group "Definitions"
+    when
+        $R: Right(type == "patent", $renewalDate:renewalDate != null)
+    then
+        modify($R) {setPaymentDueDate($R.getRenewalDate().with(TemporalAdjusters.lastDayOfMonth()))}; 
+		Helper.log(drools, $R.toStringDates());
+end
+
+rule "Payment due date, not patent"
+ruleflow-group "Definitions"
+    when
+        $R: Right(type != "patent", $renewalDate:renewalDate != null)
+    then
+        modify($R) {setPaymentDueDate($R.getRenewalDate())}; 
+		Helper.log(drools, $R.toStringDates());
+end
+
+rule "Determine anniversary for designs"
+ruleflow-group "Definitions"
+    when
+        $R: Right(type == "design", $renewalDate:renewalDate != null, $filingDate:filingDate != null)
+    then
+        modify($R) {setAnniversary((int) ChronoUnit.YEARS.between($filingDate, $renewalDate))};
+		Helper.log(drools, $R.toString());
+end
+
+rule "Earliest renewal date late grant with special conditions"
+ruleflow-group "Definitions"
+salience -10
+    when
+        $R: Right(type == "patent", lateGrantWithSpecialConditions, earliestRenewalDate != grantDate)
+    then
+        modify($R) {setEarliestRenewalDate($R.getGrantDate())};
+		Helper.log(drools, $R.toStringDates());
+end
+
+rule "LOR applies"
+ruleflow-group "Definitions"
+    when
+        $R: Right(type == "patent", renewalDate != null, lorDate != null, renewalDate.isAfter(lorDate))
+    then
+        modify($R) {setLorApplies(true)};
+		Helper.log(drools, $R.toString());
+end
+
+rule "Determine anniversary for patents based on filing date"
+ruleflow-group "Definitions"
+salience -10
+    when
+        $R: Right(type == "patent", $renewalDate:renewalDate != null, $filingDate:filingDate != null, !lateGrant)
+    then
+        modify($R) {setAnniversary((int) ChronoUnit.YEARS.between($filingDate, $renewalDate) + 1)};
+		Helper.log(drools, $R.toString());
+end
+
+rule "Update start of following month for MonthsLate if end of previous month adjusted"
+ruleflow-group "Definitions"
+salience 100
+    when
+        $R: Right($renewalDate:renewalDate != null && $today:today != null)
+	    MonthsLate(right == $R, $monthsLate:monthsLate, $endDate:endDate)
+	    $ML: MonthsLate(right == $R, monthsLate == $monthsLate + 1, !startDate.isAfter($endDate))
+    then
+        modify($ML) {setStartDate($endDate.plusDays(1))};
+		Helper.log(drools, $ML.toString());
+end
+
+rule "Determine months late"
+ruleflow-group "Definitions"
+salience -10
+    when
+        $R: Right($renewalDate:renewalDate != null && $today:today != null)
+	    $ML: MonthsLate(right == $R, $monthsLate:monthsLate, $today.isAfter(startDate.minusDays(1)), $today.isBefore(endDate.plusDays(1)))
+    then
+        modify($R) {setMonthsLate((int) $monthsLate), setEnlargementPeriod((int) $monthsLate +1)};
+		Helper.log(drools, $R.getRightId() + " " + $monthsLate);
+end

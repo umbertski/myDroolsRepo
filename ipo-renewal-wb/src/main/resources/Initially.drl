@@ -1,0 +1,62 @@
+package uk.gov.ipo.renewals;
+import uk.gov.ipo.renewals.model.*;
+import java.util.Date
+import java.time.LocalDate;
+
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
+
+rule "set up classes for price"
+ruleflow-group "Initially"
+salience -10
+    when
+        $R: Right($tmClass:tmClass != null)
+    then
+		String[] $classList = $tmClass.split(",");
+		int sequenceNumber = 1;
+		for (String $class: $classList) {  
+    		IpClass $IpClass = new IpClass(Integer.valueOf($class), sequenceNumber);
+        	insert($IpClass);
+        	modify ($R) {getClasses().add($IpClass)};
+        	Helper.log(drools, $IpClass.toString());
+        }
+end
+
+rule "Determine late grant"
+ruleflow-group "Initially"
+salience 10
+    when
+        $R: Right(type == "patent", filingDate != null, grantDate != null, lastRenewalYear == 0, grantDate.plusMonths(3).isAfter(filingDate.plusYears(4)))
+    then
+        modify($R) {setLateGrant(true)};
+		Helper.log(drools, $R.toString());
+end
+
+rule "Late grant with special conditions"
+ruleflow-group "Initially"
+    when
+        $R: Right(type == "patent", grantDate != null, renewalAnniversaryDate != null, lateGrant, grantDate.plusMonths(3).isAfter(renewalAnniversaryDate))
+    then
+        modify($R) {setLateGrantWithSpecialConditions(true)};
+		Helper.log(drools, $R.toString());
+end
+
+rule "Determine first anniversary date"
+ruleflow-group "Initially"
+salience 100
+    when
+        $R: Right($filingDate:filingDate != null, lateGrant)
+    then
+        modify($R) {setRenewalAnniversaryDate($filingDate)};
+		Helper.log(drools, $R.getRightId() + " " + $R.getRenewalAnniversaryDate());
+end
+
+rule "Determine anniversary date following grant date"
+ruleflow-group "Initially"
+salience 100
+    when
+        $R: Right($renewalAnniversaryDate: renewalAnniversaryDate != null, renewalAnniversaryDate.isBefore(grantDate))
+    then
+        modify($R) {setRenewalAnniversaryDate($renewalAnniversaryDate.plusYears(1))};
+		Helper.log(drools, $R.getRightId() + " " + $R.getRenewalAnniversaryDate());
+end

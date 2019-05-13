@@ -1,0 +1,14 @@
+package uk.gov.ipo.renewals;
+import uk.gov.ipo.renewals.model.*;
+
+rule "Add line items to request"
+ruleflow-group "Product Codes"
+salience 100000
+    when
+    	$LI:LineItem()
+        $R: Request(!lineItems.contains($LI))
+    then
+        modify($LI) {setSequenceNumber($R.getLineItems().size() + 1)};
+        modify($R) {getLineItems().add($LI))};
+		Helper.log(drools, $LI.toString());
+end

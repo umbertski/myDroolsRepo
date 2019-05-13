@@ -1,0 +1,12 @@
+package uk.gov.ipo.renewals;
+import uk.gov.ipo.renewals.model.*;
+
+rule "Set right to be ineligible"
+ruleflow-group "Eligibility"
+salience 100000
+    when
+        $R: Right(eligibilityStatus != null)
+    then
+        modify($R) {setEligibleForRenewal(false)};
+        Helper.log(drools, $R.toString());
+end

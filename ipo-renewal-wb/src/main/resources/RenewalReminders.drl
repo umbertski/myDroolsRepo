@@ -1,0 +1,87 @@
+package uk.gov.ipo.renewals;
+import uk.gov.ipo.renewals.model.*;
+import java.util.ArrayList;
+import java.time.LocalDate;
+import java.time.ZoneId;
+
+rule "today for renewal reminder request"
+ruleflow-group "Initially"
+    when
+        $R: Request(type == "renewalReminders", today == null)
+    then
+        modify($R) {setToday(LocalDate.now(ZoneId.of("Europe/London")))};
+        Helper.log(drools, $R.toString());
+end
+
+rule "insert right for reminder for designs"
+ruleflow-group "Initially"
+dialect "mvel"
+    when
+    	$Request:Request(type == "renewalReminders", $rights:rights, $today:today != null) 
+    then
+    	$Design = new Right("","design", $today);
+    	insert($Design);
+    	Helper.log(drools, $Design.toStringDates());	
+end
+
+rule "insert right for reminder for patents on 1st day of month"
+ruleflow-group "Initially"
+dialect "mvel"
+    when
+    	$Request:Request(type == "renewalReminders", $rights:rights, $today:today != null, today.dayOfMonth == 1) 
+    then
+    	$Patent = new Right("","patent", $today);
+    	insert($Patent);
+    	Helper.log(drools, $Patent.toStringDates());	
+end
+
+rule "insert right for reminder for patents for other days in month"
+ruleflow-group "Definitions"
+dialect "mvel"
+salience 99999
+    when
+    	$Request:Request(type == "renewalReminders") 
+    	$R:Right(type == "patent", renewalDate != null && renewalDate.dayOfMonth < renewalDate.lengthOfMonth)
+    	not Right(type == "patent", renewalDate > $R.renewalDate)
+    then
+		$Patent = new Right("", "patent", $R.getToday, $R.getRenewalDate().plusDays(1));
+    	insert($Patent);
+    	Helper.log(drools, $Patent.toStringDates());	
+end
+
+rule "add rights renewal reminder to request"
+ruleflow-group "Definitions"
+dialect "mvel"
+salience 99999
+    when
+    	$Right:Right(renewalDate != null && today != null && renewalDate.getDayOfMonth() >= today.getDayOfMonth())
+    	$Request:Request(type == "renewalReminders", rights not contains $Right) 
+    then
+    	Helper.log(drools, $Right.toStringDates());	
+		modify ($Request) {getRights().add($Right)};    	
+end
+
+rule "add rights for renewal reminder for additional dates in previous month for designs"
+ruleflow-group "Definitions"
+dialect "mvel"
+salience 99999
+    when
+    	$Request:Request(type == "renewalReminders", today != null) 
+    	$R:Right($type:type == "design", $renewalDate:renewalDate != null && $today:today != null && renewalDate.minusDays(1).getDayOfMonth() > today.minusDays(1).lengthOfMonth())
+    then
+	   	$Right = new Right("",$type, $today, $renewalDate.minusDays(1));
+	   	insert($Right);
+	    Helper.log(drools, $R.toStringDates());	
+end
+
+rule "add latest renewal date no late fee to right"
+ruleflow-group "Finally"
+dialect "mvel"
+    when
+    	$Request:Request(type == "renewalReminders") 
+    	MonthsLate($Right:right, $endDate:endDate)
+    	Right(this == $Right, latestRenewalDateNoLateFee == null)
+    then
+	   	modify ($Right) {setLatestRenewalDateNoLateFee($endDate)};
+	    Helper.log(drools, $Right.toStringDates());	
+end

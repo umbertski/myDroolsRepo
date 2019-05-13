@@ -1,0 +1,135 @@
+package uk.gov.ipo.renewals;
+import uk.gov.ipo.renewals.model.*;
+import java.util.Date
+import java.time.LocalDate;
+import uk.gov.ipo.renewals.model.Helper;
+
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
+
+
+rule "insert fee for not late grant or already renewed"
+ruleflow-group "Pricing"
+dialect "mvel"
+salience 99999
+    when
+    	$Right: Right(type == "patent", eligibleForRenewal, $anniversary:anniversary != null, lateGrant == false)
+    	not FeeForYear(right == $Right, year == $anniversary)	
+    then
+    	FeeForYear $FeeForYear = new FeeForYear($Right, $Right.getType(), $anniversary, $Right.getFilingDate().plusYears($anniversary)); 
+    	modify ($Right) {setRenewalFromYearNumber($anniversary), setRenewalToYearNumber($anniversary)};
+    	insert($FeeForYear);
+        Helper.log(drools, $FeeForYear.toString());
+end
+
+rule "insert fee for first renewal late grant"
+ruleflow-group "Pricing"
+dialect "mvel"
+salience 99999
+    when
+    	$Right: Right(type == "patent", eligibleForRenewal, filingDate != null , lateGrant == true)
+    	not FeeForYear(right == $Right)
+    then
+    	FeeForYear $FeeForYear = new FeeForYear($Right, $Right.getType(), 5, $Right.getFilingDate().plusYears(4)); 
+    	modify ($Right) {setRenewalFromYearNumber(5), setRenewalToYearNumber(5)};
+    	insert($FeeForYear);
+        Helper.log(drools, $FeeForYear.toString());
+end
+
+rule "insert fee for subsequent outstanding years late grant"
+ruleflow-group "Pricing"
+dialect "mvel"
+salience 99999
+    when
+    	$Fee: FeeForYear($year:year)
+    	$Right: Right(this == $Fee.right, type == "patent", rightId.length() >= 2 && rightId.substring(0,2) == "GB", eligibleForRenewal, lateGrant, filingDate != null, renewalDate != null, filingDate.plusYears($year).isBefore(renewalDate))
+    	not FeeForYear(right == $Right, year == $year +1)
+    then
+    	FeeForYear $NextFee = new FeeForYear($Right, $Fee.getType(), $year + 1, $Right.getFilingDate().plusYears($year)); 
+    	modify ($Right) {setRenewalToYearNumber($year + 1)};
+    	insert($NextFee);
+        Helper.log(drools, $NextFee.toString());
+end
+
+rule "Update fee for subsequent outstanding years late grant"
+ruleflow-group "Pricing"
+dialect "mvel"
+salience 99999
+    when
+    	$Fee: FeeForYear($year:year)
+    	$Right: Right(this == $Fee.right, type == "patent", rightId.length() >= 2 && rightId.substring(0,2) == "EP", eligibleForRenewal, lateGrant, filingDate != null, renewalDate != null,  filingDate.plusYears($year).isBefore(renewalDate.plusDays(1)))
+    	not FeeForYear(right == $Right, year == $year +1)
+    then
+    	modify ($Fee) {setYear($year + 1), setRenewalDate($Right.getFilingDate().plusYears($year))}; 
+    	modify ($Right) {setRenewalFromYearNumber($year + 1), setRenewalToYearNumber($year + 1), setAnniversary($year +1)};
+        Helper.log(drools, $Fee.toString());
+end
+
+
+rule "total fees for patent"
+ruleflow-group "Pricing"
+salience -10
+dialect "mvel"
+    when
+   	$Right: Right(type == "patent", eligibleForRenewal)
+     $totalFee : Number() from accumulate(
+         FeeForYear( right == $Right, $fee : fee ),
+         sum( $fee ) )
+    then
+    	modify ($Right) {setFee($totalFee)}
+        Helper.log(drools, $Right.toString());
+end
+
+rule "last renewal for patent"
+ruleflow-group "Pricing"
+salience -10
+dialect "mvel"
+    when
+   	$Right: Right(type == "patent", eligibleForRenewal)
+    FeeForYear( right == $Right, lastRenewal )
+    then
+    	modify ($Right) {setLastRenewal(true)}
+        Helper.log(drools, $Right.toString());
+end
+
+
+rule "total class fees for trade mark"
+ruleflow-group "Pricing"
+salience -10
+dialect "mvel"
+    when
+	$R:Right(type == "trade mark")
+    $totalClassFees : Double() from accumulate(
+         IpClass($R.classes contains this, $fee : fee != null ),
+         sum( $fee ) ) 
+    then
+    	modify ($R) {setClassFees($totalClassFees)};
+        Helper.log(drools, " " +  $totalClassFees);
+end
+
+rule "total fees for order"
+ruleflow-group "Pricing"
+salience -10
+dialect "mvel"
+    when
+	$Request:Request()
+     $totalFees : Double() from accumulate(
+         Right($fee : fee != null ),
+         sum( $fee ) )
+     $totalLateFees : Double() from accumulate(
+         Right($lateFee : lateFee != null ),
+         sum( $lateFee ) )
+    then
+    	modify ($Request) {setOrderTotal($totalFees + $totalLateFees)};
+        Helper.log(drools, " " +  $Request.getOrderTotal());
+end
+
+rule "total fees for right"
+ruleflow-group "Finally"
+dialect "mvel"
+    when
+   	$Right: Right(eligibleForRenewal, $fee:fee, $lateFee:lateFee)
+    then
+    	modify ($Right) {setTotalFee($fee + $lateFee)}
+        Helper.log(drools, $Right.toString());
+end

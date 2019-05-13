@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<definitions id="Definition"
+             targetNamespace="http://www.jboss.org/drools"
+             typeLanguage="http://www.java.com/javaTypes"
+             expressionLanguage="http://www.mvel.org/2.0"
+             xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd"
+             xmlns:g="http://www.jboss.org/drools/flow/gpd"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+             xmlns:tns="http://www.jboss.org/drools">
+
+  <process processType="Private" isExecutable="true" id="createOrder" name="createOrder" tns:packageName="uk.gov.ipo.renewals.model" >
+
+    <extensionElements>
+     <tns:import name="org.kie.api.runtime.process.CaseAssignment" />
+     <tns:import name="org.kie.api.runtime.process.CaseData" />
+    </extensionElements>
+    <!-- nodes -->
+    <businessRuleTask id="_jbpm-unique-591b6c4ba8a2" name="Product Codes" g:ruleFlowGroup="Product Codes" 
+ implementation="http://www.jboss.org/drools/rule" >
+      <ioSpecification>
+        <inputSet>
+        </inputSet>
+        <outputSet>
+        </outputSet>
+      </ioSpecification>
+    </businessRuleTask>
+    <businessRuleTask id="_jbpm-unique-359ac433bea8" name="Finally" g:ruleFlowGroup="Finally" 
+ implementation="http://www.jboss.org/drools/rule" >
+      <ioSpecification>
+        <inputSet>
+        </inputSet>
+        <outputSet>
+        </outputSet>
+      </ioSpecification>
+    </businessRuleTask>
+    <endEvent id="_jbpm-unique-92f578bac035" name="End" >
+        <terminateEventDefinition />
+    </endEvent>
+    <startEvent id="_jbpm-unique-92ea6186cf98" name="Start"  isInterrupting="false">
+    </startEvent>
+    <businessRuleTask id="_jbpm-unique-356ef33251d8" name="Initially" g:ruleFlowGroup="Initially" 
+ implementation="http://www.jboss.org/drools/rule" >
+      <ioSpecification>
+        <inputSet>
+        </inputSet>
+        <outputSet>
+        </outputSet>
+      </ioSpecification>
+    </businessRuleTask>
+    <businessRuleTask id="_jbpm-unique-b3d4bed3ead7" name="Definitions" g:ruleFlowGroup="Definitions" 
+ implementation="http://www.jboss.org/drools/rule" >
+      <ioSpecification>
+        <inputSet>
+        </inputSet>
+        <outputSet>
+        </outputSet>
+      </ioSpecification>
+    </businessRuleTask>
+    <businessRuleTask id="_jbpm-unique-114dffc791a8" name="Pricing" g:ruleFlowGroup="Pricing" 
+ implementation="http://www.jboss.org/drools/rule" >
+      <ioSpecification>
+        <inputSet>
+        </inputSet>
+        <outputSet>
+        </outputSet>
+      </ioSpecification>
+    </businessRuleTask>
+
+    <!-- connections -->
+    <sequenceFlow id="_jbpm-unique-114dffc791a8-_jbpm-unique-591b6c4ba8a2" sourceRef="_jbpm-unique-114dffc791a8" targetRef="_jbpm-unique-591b6c4ba8a2" />
+    <sequenceFlow id="_jbpm-unique-591b6c4ba8a2-_jbpm-unique-359ac433bea8" sourceRef="_jbpm-unique-591b6c4ba8a2" targetRef="_jbpm-unique-359ac433bea8" />
+    <sequenceFlow id="_jbpm-unique-359ac433bea8-_jbpm-unique-92f578bac035" sourceRef="_jbpm-unique-359ac433bea8" targetRef="_jbpm-unique-92f578bac035" />
+    <sequenceFlow id="_jbpm-unique-92ea6186cf98-_jbpm-unique-356ef33251d8" sourceRef="_jbpm-unique-92ea6186cf98" targetRef="_jbpm-unique-356ef33251d8" />
+    <sequenceFlow id="_jbpm-unique-356ef33251d8-_jbpm-unique-b3d4bed3ead7" sourceRef="_jbpm-unique-356ef33251d8" targetRef="_jbpm-unique-b3d4bed3ead7" />
+    <sequenceFlow id="_jbpm-unique-b3d4bed3ead7-_jbpm-unique-114dffc791a8" sourceRef="_jbpm-unique-b3d4bed3ead7" targetRef="_jbpm-unique-114dffc791a8" />
+
+  </process>
+
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="createOrder" >
+      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-591b6c4ba8a2" >
+        <dc:Bounds x="16" y="336" width="80" height="48" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-359ac433bea8" >
+        <dc:Bounds x="16" y="416" width="80" height="48" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-92f578bac035" >
+        <dc:Bounds x="32" y="496" width="48" height="48" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-92ea6186cf98" >
+        <dc:Bounds x="32" y="16" width="48" height="48" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-356ef33251d8" >
+        <dc:Bounds x="16" y="96" width="80" height="48" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-b3d4bed3ead7" >
+        <dc:Bounds x="16" y="176" width="80" height="48" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_jbpm-unique-114dffc791a8" >
+        <dc:Bounds x="16" y="256" width="80" height="48" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-114dffc791a8-_jbpm-unique-591b6c4ba8a2" >
+        <di:waypoint x="56" y="280" />
+        <di:waypoint x="56" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-591b6c4ba8a2-_jbpm-unique-359ac433bea8" >
+        <di:waypoint x="56" y="360" />
+        <di:waypoint x="56" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-359ac433bea8-_jbpm-unique-92f578bac035" >
+        <di:waypoint x="56" y="440" />
+        <di:waypoint x="56" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-92ea6186cf98-_jbpm-unique-356ef33251d8" >
+        <di:waypoint x="56" y="40" />
+        <di:waypoint x="56" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-356ef33251d8-_jbpm-unique-b3d4bed3ead7" >
+        <di:waypoint x="56" y="120" />
+        <di:waypoint x="56" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="_jbpm-unique-b3d4bed3ead7-_jbpm-unique-114dffc791a8" >
+        <di:waypoint x="56" y="200" />
+        <di:waypoint x="56" y="280" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</definitions>
