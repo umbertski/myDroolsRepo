@@ -34,16 +34,17 @@
   <description>KIE Workbench Playground Parent</description>
 
   <modules>
-    <module>curriculumcourse</module>
-    <module>dinnerparty</module>
-    <module>employee-rostering</module>
-    <module>evaluation</module>
-    <module>optacloud</module>
+    
+    
+    
+    
+    
     <module>mortgages</module>
-    <module>itorders</module>
-    <module>kie-all-playground</module>
-    <module>kie-decision-playground</module>
-    <module>mortgage-process</module>
+    <module>ipo-renewals-wb</module>
+    
+    
+    
+    
   </modules>
 
   <dependencyManagement>
