@@ -34,7 +34,8 @@ import uk.gov.ipo.renewals.config.*;
 
 @JsonIgnoreProperties({
 	"today",
-	"type"
+	"type",
+	"overdueRemindersDate"
 })
 
 
@@ -52,7 +53,9 @@ public class Request {
 	@JsonView({View.Renew.class, View.Price.class, View.Reminders.class, View.UpdateInfo.class})
     private List<Right> rights = new ArrayList<Right>();
     private LocalDate today;
-	@JsonView(View.CreateOrder.class)
+    private LocalDate overdueRemindersDate;
+
+    @JsonView(View.CreateOrder.class)
     private List<LineItem> lineItems = new ArrayList<LineItem>();
 	private String type;
 	
@@ -108,9 +111,19 @@ public class Request {
 		this.today = today;
 	}
 
-	public void setDate(LocalDate today) {
-        this.today = today;
+    public void setToday(String today) {
+    	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        this.today = LocalDate.parse(today, formatter);
     }
+        
+	@JsonSerialize(using = LocalDateSerializer.class)  
+    public LocalDate getOverdueRemindersDate() {
+		return overdueRemindersDate;
+	}
+
+	public void setOverdueRemindersDate(LocalDate overdueRemindersDate) {
+		this.overdueRemindersDate = overdueRemindersDate;
+	}
 
 	public void setType(String type) {
 		this.type = type;
@@ -120,14 +133,12 @@ public class Request {
 		return type;
 	}
 	
-    public void setDate(String today) {
-    	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        this.today = LocalDate.parse(today, formatter);
-    }
-
     @Override
     public String toString() {
-        return "rights:" + getRights() + "type:" + getType();
+        return "rights:" +
+        		", today=" + today +
+        		", overdueReminderDate=" + overdueRemindersDate +
+        		getRights() + "type:" + getType();
     }
     
     

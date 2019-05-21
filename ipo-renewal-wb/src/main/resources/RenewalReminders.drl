@@ -1,5 +1,6 @@
 package uk.gov.ipo.renewals;
 import uk.gov.ipo.renewals.model.*;
+import uk.gov.ipo.renewals.constants.DigitalServicesConfig.RequestType;
 import java.util.ArrayList;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -7,8 +8,9 @@ import java.time.ZoneId;
 rule "today for renewal reminder request"
 ruleflow-group "Initially"
     when
-        $R: Request(type == "renewalReminders", today == null)
+        $R: Request(type in (RequestType.RENEWAL_REMINDERS, RequestType.OVERDUE_REMINDERS), today == null)
     then
+        Helper.log(drools, $R.toString());
         modify($R) {setToday(LocalDate.now(ZoneId.of("Europe/London")))};
         Helper.log(drools, $R.toString());
 end
@@ -17,18 +19,31 @@ rule "insert right for reminder for designs"
 ruleflow-group "Initially"
 dialect "mvel"
     when
-    	$Request:Request(type == "renewalReminders", $rights:rights, $today:today != null) 
+    	$Request:Request(type == RequestType.RENEWAL_REMINDERS, $rights:rights, $today:today != null) 
     then
     	$Design = new Right("","design", $today);
     	insert($Design);
     	Helper.log(drools, $Design.toStringDates());	
 end
 
+rule "add rights for renewal reminder for additional dates in previous month for designs"
+ruleflow-group "Initially"
+dialect "mvel"
+salience 99999
+    when
+    	$Request:Request(type == RequestType.RENEWAL_REMINDERS, today != null) 
+    	$R:Right($type:type == "design", $renewalDate:renewalDate != null && $today:today != null && renewalDate.minusDays(1).getDayOfMonth() > today.minusDays(1).lengthOfMonth())
+    then
+	   	$Right = new Right("",$type, $today, $renewalDate.minusDays(1));
+	   	insert($Right);
+	    Helper.log(drools, $R.toStringDates());	
+end
+
 rule "insert right for reminder for patents on 1st day of month"
 ruleflow-group "Initially"
 dialect "mvel"
     when
-    	$Request:Request(type == "renewalReminders", $rights:rights, $today:today != null, today.dayOfMonth == 1) 
+    	$Request:Request(type == RequestType.RENEWAL_REMINDERS, $rights:rights, $today:today != null, today.dayOfMonth == 1) 
     then
     	$Patent = new Right("","patent", $today);
     	insert($Patent);
@@ -36,11 +51,11 @@ dialect "mvel"
 end
 
 rule "insert right for reminder for patents for other days in month"
-ruleflow-group "Definitions"
+ruleflow-group "Initially"
 dialect "mvel"
 salience 99999
     when
-    	$Request:Request(type == "renewalReminders") 
+    	$Request:Request(type in ("renewalReminders", "overdueReminders"))
     	$R:Right(type == "patent", renewalDate != null && renewalDate.dayOfMonth < renewalDate.lengthOfMonth)
     	not Right(type == "patent", renewalDate > $R.renewalDate)
     then
@@ -55,30 +70,29 @@ dialect "mvel"
 salience 99999
     when
     	$Right:Right(renewalDate != null && today != null && renewalDate.getDayOfMonth() >= today.getDayOfMonth())
-    	$Request:Request(type == "renewalReminders", rights not contains $Right) 
+    	$Request:Request(type == RequestType.RENEWAL_REMINDERS, rights not contains $Right) 
     then
     	Helper.log(drools, $Right.toStringDates());	
 		modify ($Request) {getRights().add($Right)};    	
 end
 
-rule "add rights for renewal reminder for additional dates in previous month for designs"
+rule "add rights overdue reminders to request"
 ruleflow-group "Definitions"
 dialect "mvel"
 salience 99999
     when
-    	$Request:Request(type == "renewalReminders", today != null) 
-    	$R:Right($type:type == "design", $renewalDate:renewalDate != null && $today:today != null && renewalDate.minusDays(1).getDayOfMonth() > today.minusDays(1).lengthOfMonth())
+    	$Right:Right(renewalDate != null)
+    	$Request:Request(type == RequestType.OVERDUE_REMINDERS, rights not contains $Right) 
     then
-	   	$Right = new Right("",$type, $today, $renewalDate.minusDays(1));
-	   	insert($Right);
-	    Helper.log(drools, $R.toStringDates());	
+    	Helper.log(drools, $Right.toStringDates());	
+		modify ($Request) {getRights().add($Right)};    	
 end
 
 rule "add latest renewal date no late fee to right"
 ruleflow-group "Finally"
 dialect "mvel"
     when
-    	$Request:Request(type == "renewalReminders") 
+    	$Request:Request(type in (RequestType.RENEWAL_REMINDERS, RequestType.OVERDUE_REMINDERS)) 
     	MonthsLate($Right:right, $endDate:endDate)
     	Right(this == $Right, latestRenewalDateNoLateFee == null)
     then

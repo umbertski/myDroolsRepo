@@ -17,7 +17,6 @@ public class Helper {
 	private static boolean debug = false;
 
 	public static void log(final KnowledgeHelper drools, final String message){
-//        if (Helper.debug) System.out.println("rule triggered: " + drools.getRule().getName() + " : " + message);
         if (Helper.debug) 
         	logger.info("rule triggered: " + drools.getRule().getName() + " : " + message);
     }

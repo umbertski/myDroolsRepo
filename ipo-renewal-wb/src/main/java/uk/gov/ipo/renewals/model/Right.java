@@ -148,9 +148,6 @@ public class Right {
 	@JsonView(View.UpdateInfo.class)
     private int monthsLate;
 
-	
-	@JsonView(View.Reminders.class)
-    private LocalDate renewalReminderOverdueDate;
 	@JsonView(View.Reminders.class)
     private LocalDate latestRenewalDate;
 	@JsonView(View.Reminders.class)
@@ -590,15 +587,6 @@ public class Right {
 	public void setLatestRenewalDateNoLateFee(LocalDate latestRenewalDateNoLateFee) {
 		this.latestRenewalDateNoLateFee = latestRenewalDateNoLateFee;
 	}
-
-    @JsonSerialize(using = LocalDateSerializer.class)  
-	public LocalDate getRenewalReminderOverdueDate() {
-		return renewalReminderOverdueDate;
-	}
-
-	public void setRenewalReminderOverdueDate(LocalDate renewalReminderOverdueDate) {
-		this.renewalReminderOverdueDate = renewalReminderOverdueDate;
-	}
 	
 	public String getTmClass() {
 		return tmClass;
@@ -648,7 +636,6 @@ public class Right {
         		", latestRenewalDate=" + latestRenewalDate + 
         		", latestRestoreDate=" + latestRestoreDate +
         		", latestRenewalDateNoLateFees" + latestRenewalDateNoLateFee +
-        		", renewalReminderDate=" + renewalReminderOverdueDate +
         		", today=" + today + " }";
     }
 }
