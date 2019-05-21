@@ -30,19 +30,29 @@
   <parent>
     <groupId>org.kie.workbench.playground</groupId>
     <artifactId>playground-parent</artifactId>
-    <version>7.22.0-SNAPSHOT</version>
+    <version>7.14.0.Final</version>
   </parent>
     <groupId>uk.gov.ipo.renewals</groupId>
   <artifactId>ipo-renewals</artifactId>
   <packaging>kjar</packaging>
   <name>IPO renewals</name>
   <description>IPO renewals rules.</description>
+  
   <dependencies>
     <dependency>
       <groupId>org.kie</groupId>
       <artifactId>kie-api</artifactId>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.drools</groupId>
+       <artifactId>drools-core</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+       <groupId>com.fasterxml.jackson.core</groupId>
+       <artifactId>jackson-databind</artifactId>
+	</dependency>
   </dependencies>
 
   <build>
@@ -52,6 +62,12 @@
         <artifactId>kie-maven-plugin</artifactId>
         <version>${version.org.kie}</version>
         <extensions>true</extensions>
+      </plugin>
+      <plugin>
+      	<artifactId>maven-enforcer-plugin</artifactId>
+      	<configuration>
+	        <skip>true</skip>
+      	</configuration>
       </plugin>
     </plugins>
   </build>
